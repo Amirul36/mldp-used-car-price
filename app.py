@@ -20,8 +20,6 @@ for c in ["brand", "model", "fuel_type", "accident", "clean_title"]:
 
 # Dropdown lists
 brand_options = sorted(df_options["brand"].dropna().unique().tolist())
-
-# Some reasonable defaults (only if they exist)
 default_brand = "Toyota" if "Toyota" in brand_options else brand_options[0]
 
 # -----------------------------
@@ -40,10 +38,8 @@ st.subheader("Car Details")
 col1, col2 = st.columns(2)
 
 with col1:
-    # Brand dropdown
     brand = st.selectbox("Brand", brand_options, index=brand_options.index(default_brand))
 
-    # Model dropdown filtered by brand
     models_for_brand = sorted(
         df_options.loc[df_options["brand"] == brand, "model"].dropna().unique().tolist()
     )
@@ -56,7 +52,6 @@ with col1:
     milage = st.number_input("Mileage (miles)", min_value=0, max_value=500000, value=60000)
 
 with col2:
-    # Fuel type dropdown from dataset if possible, else fallback list
     if "fuel_type" in df_options.columns:
         fuel_options = sorted(df_options["fuel_type"].dropna().unique().tolist())
         if not fuel_options:
@@ -66,10 +61,16 @@ with col2:
 
     fuel_type = st.selectbox("Fuel Type", fuel_options)
 
-    engine_liters = st.number_input("Engine Size (L)", min_value=0.5, max_value=10.0, value=2.5, step=0.1)
-    engine_cylinders = st.number_input("Engine Cylinders", min_value=2, max_value=16, value=4, step=1)
+    engine_liters = st.number_input(
+        "Engine Size (L)", min_value=0.5, max_value=10.0, value=2.5, step=0.1
+    )
+    engine_cylinders = st.number_input(
+        "Engine Cylinders", min_value=2, max_value=16, value=4, step=1
+    )
 
-    transmission_group = st.selectbox("Transmission Group", ["Automatic", "Manual", "CVT", "Other", "Unknown"])
+    transmission_group = st.selectbox(
+        "Transmission Group", ["Automatic", "Manual", "CVT", "Other", "Unknown"]
+    )
 
 st.subheader("Condition / Listing Info")
 
@@ -78,15 +79,16 @@ col3, col4 = st.columns(2)
 with col3:
     ext_color_group = st.selectbox(
         "Exterior Color Group",
-        ["Black", "White", "Silver", "Gray", "Blue", "Red", "Green", "Brown", "Beige", "Yellow", "Orange", "Purple", "Other", "Unknown"]
+        ["Black", "White", "Silver", "Gray", "Blue", "Red", "Green", "Brown", "Beige",
+         "Yellow", "Orange", "Purple", "Other", "Unknown"]
     )
     int_color_group = st.selectbox(
         "Interior Color Group",
-        ["Black", "White", "Silver", "Gray", "Blue", "Red", "Green", "Brown", "Beige", "Yellow", "Orange", "Purple", "Other", "Unknown"]
+        ["Black", "White", "Silver", "Gray", "Blue", "Red", "Green", "Brown", "Beige",
+         "Yellow", "Orange", "Purple", "Other", "Unknown"]
     )
 
 with col4:
-    # Accident options from dataset if possible, else fallback
     if "accident" in df_options.columns:
         accident_options = sorted(df_options["accident"].dropna().unique().tolist())
         if not accident_options:
@@ -96,7 +98,6 @@ with col4:
 
     accident = st.selectbox("Accident History", accident_options)
 
-    # Clean title options from dataset if possible, else fallback
     if "clean_title" in df_options.columns:
         clean_title_options = sorted(df_options["clean_title"].dropna().unique().tolist())
         if not clean_title_options:
@@ -110,12 +111,11 @@ with col4:
 # Predict
 # -----------------------------
 if st.button("Predict Price"):
-    # Build input record with the SAME feature names used during training
     new_car = {
         "brand": str(brand).strip(),
         "model": str(model_name).strip(),
         "model_year": int(model_year),
-        "milage": float(milage),  # IMPORTANT: matches your training column name
+        "milage": float(milage),
         "fuel_type": str(fuel_type).strip(),
         "engine_liters": float(engine_liters),
         "engine_cylinders": float(engine_cylinders),
@@ -128,8 +128,8 @@ if st.button("Predict Price"):
 
     new_df = pd.DataFrame([new_car])
 
-    # One-hot encode new input
-    new_encoded = pd.get_dummies(new_df, drop_first=True)
+    # One-hot encode new input (DO NOT drop_first for single-row input)
+    new_encoded = pd.get_dummies(new_df, drop_first=False)
 
     # Align columns to match training
     new_aligned = new_encoded.reindex(columns=train_cols, fill_value=0)
@@ -138,6 +138,3 @@ if st.button("Predict Price"):
     pred_price = model.predict(new_aligned)[0]
 
     st.success(f"Estimated Price: **${pred_price:,.2f}**")
-
-    with st.expander("Show encoded input (debug)"):
-        st.dataframe(new_aligned)
