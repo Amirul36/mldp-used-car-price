@@ -11,7 +11,7 @@ train_cols = joblib.load("train_columns.pkl")
 # -----------------------------
 # Load dataset for dropdown options
 # -----------------------------
-df_options = pd.read_csv("used_cars_options_cleaned.csv")
+df_options = pd.read_csv("used_cars_clean.csv")  # the SAME version you trained on
 
 # Clean text columns for stable dropdowns
 for c in ["brand", "model", "fuel_type", "accident", "clean_title"]:
